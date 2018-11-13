@@ -109,7 +109,7 @@ void Spring::Update(float dt)
     // update the angle of the spring according to the masses
     this->angleVars.current_previous = this->angleVars.current;
     double two_pi = 2.0f * 3.1415f;
-    float comp_angle = atan2(-dist.y, -dist.x) + this->mass_a->GetRotation();
+    float comp_angle = atan2(-dist.y, -dist.x) ;//+ this->mass_a->GetRotation();
     //float comp_angle = atan2(-dist.y, -dist.x) - this->mass_a->GetRotation();
     //float comp_angle = this->mass_a->GetRotation() - this->angle_init;
     this->angleVars.current = comp_angle;
@@ -147,8 +147,8 @@ void Spring::Update(float dt)
     sf::Vector2f dist_norm = sf::Vector2f(
                             dist.x / this->lengthVars.current, 
                             dist.y / this->lengthVars.current);
-    this->mass_a->AddForce(force_magnitude * dist_norm);
-    this->mass_b->AddForce(-force_magnitude * dist_norm);
+    this->mass_a->AddForceVisualise(force_magnitude * dist_norm);
+    this->mass_b->AddForceVisualise(-force_magnitude * dist_norm);
 
     // --------------------- UPDATE LENGTH TERM ---------------------------
     float torque = this->angleVars.ComputeForceMagnitude();
@@ -179,6 +179,7 @@ void Spring::Update(float dt)
     //                            0.0f, //torque * dist.y/2.0f, 
     //                            -torque * dist.y/2.0f); //F = T x R
     this->mass_b->AddForce(force_rot);
+    this->mass_a->AddForce(-force_rot);
     //this->mass_a->AddTorque(-torque);
     //this->mass_b->AddTorque(-torque);
     this->mass_b->SetRotation(this->angleVars.current); //TODO: bad, should use torque physics

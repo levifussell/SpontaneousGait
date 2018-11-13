@@ -19,6 +19,12 @@ private:
     float torque_total;
     float mom_inertia;
 
+    bool print_data;
+
+    bool debug_forces;
+    sf::Vector2f forces_list[10];
+    int arr_idx;
+
     float y_floor_boundary;
 
     float ComputeRadius();
@@ -29,6 +35,7 @@ public:
 
     void Init();
     void AddForce(sf::Vector2f force);
+    void AddForceVisualise(sf::Vector2f force);
     void AddTorque(float torque);
     void Update(float dt);
     void Draw(sf::RenderWindow& window);

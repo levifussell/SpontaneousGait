@@ -29,11 +29,23 @@ void Mass::Init()
     this->mom_inertia = this->mass_kg; //TODO: copmute real moment of inertia
 
     this->y_floor_boundary = 0.0f;
+
+    this->debug_forces = true; //display forces applied to the mass
+    this->arr_idx = 0;
+    
+    this->print_data = false;
 }
 
 void Mass::AddForce(sf::Vector2f force)
 {
     this->force_total += force;
+}
+void Mass::AddForceVisualise(sf::Vector2f force)
+{
+    this->AddForce(force);
+
+    this->forces_list[this->arr_idx] = force;
+    this->arr_idx = (this->arr_idx + 1) % 10;
 }
 
 void Mass::AddTorque(float torque)
@@ -53,8 +65,8 @@ void Mass::Update(float dt)
     if(this->pos.y + this->ComputeRadius() >= y_floor_boundary)
     {
         sf::Vector2f friction = sf::Vector2f(0.0f, 0.0f);
-        float mu = 0.08f;
-        float beta = 15.0f; //15.0f;
+        float mu = 1.1f;
+        float beta = 1005.0f; //15.0f;
         //friction.y = 0.008f;
         //float normal_y = 0.008f;
        
@@ -62,15 +74,25 @@ void Mass::Update(float dt)
         if(this->force_total.y >= 0.0)
         {
             normal_y = -this->force_total.y + (1.0/dt)*this->mass_kg*this->vel.y;
-            std::cout << "NORM: " << normal_y << "\n";
-            std::cout << "FORCEY: " << this->force_total.y << "\n";
-            std::cout << "VELY: " << this->vel.y << "\n";
+            if(this->print_data)
+            {
+                std::cout << "NORM: " << normal_y << "\n";
+                std::cout << "FORCEY: " << this->force_total.y << "\n";
+                std::cout << "VELY: " << this->vel.y << "\n";
+            }
         }
+        friction.y = -1.0f*normal_y;
 
-        std::cout << "VELX: " << this->vel.x << "\n";
-        std::cout << "TAN: " << -tanh(beta*this->vel.x) << "\n";
-        //friction.x = mu * normal_y * -tanh(beta * this->vel.x);
+        if(this->print_data)
+        {
+            std::cout << "VELX: " << this->vel.x << "\n";
+            std::cout << "TAN: " << -tanh(beta*this->vel.x) << "\n";
+        }
         friction.x = mu * normal_y * -tanh(beta * this->vel.x);
+        //if(this->vel.x < 0.0)
+        //    friction.x = mu * normal_y; // * -tanh(beta * this->vel.x);
+        //else
+        //    friction.x = -mu * normal_y; // * -tanh(beta * this->vel.x);
         this->AddForce(friction);
     }
     //else
@@ -104,7 +126,7 @@ void Mass::Update(float dt)
     if(this->pos.y + this->ComputeRadius() >= y_floor_boundary)
     {
         this->pos.y = this->y_floor_boundary - this->ComputeRadius();
-        this->vel.y = 0.0f;
+        //this->vel.y = 0.0f;
     }
 
     // reset the force
@@ -133,6 +155,31 @@ void Mass::Draw(sf::RenderWindow& window)
         sf::Vertex(sf::Vector2f(this->GetPosCentreX() + rot_x, this->GetPosCentreY() + rot_y))
     };
     window.draw(floor, 2, sf::Lines);
+
+    // draw debug forces
+    if(this->debug_forces)
+    {
+        for(int f = 0; f < this->arr_idx; ++f)
+        {
+            sf::Color f_col = sf::Color(255.0f, 125.0f, 0.0f, 255.0f);
+            sf::Vector2f cent = sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY());
+            sf::Vertex force[] =
+            {
+                sf::Vertex(cent, f_col),
+                sf::Vertex(cent + this->forces_list[f]*10.0f, f_col)
+            };
+            window.draw(force, 2, sf::Lines);
+        }
+        this->arr_idx = 0;
+        //sf::Color f_col = sf::Color(255.0f, 125.0f, 0.0f, 255.0f);
+        //sf::Vector2f cent = sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY());
+        //sf::Vertex force[] =
+        //{
+        //    sf::Vertex(cent, f_col),
+        //    sf::Vertex(cent + this->force_total*10.0f, f_col)
+        //};
+        //window.draw(force, 2, sf::Lines);
+    }
 }
 
 //get/set
@@ -164,5 +211,5 @@ void Mass::SetRotation(float value) //TODO: bad function should use physics
 // private
 float Mass::ComputeRadius()
 {
-    return this->mass_kg * 10.0f;
+    return std::min(this->mass_kg * 60.0f, 10.0f);
 }
