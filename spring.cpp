@@ -147,16 +147,16 @@ void Spring::Update(float dt)
     sf::Vector2f dist_norm = sf::Vector2f(
                             dist.x / this->lengthVars.current, 
                             dist.y / this->lengthVars.current);
-    this->mass_a->AddForceVisualise(force_magnitude * dist_norm);
-    this->mass_b->AddForceVisualise(-force_magnitude * dist_norm);
+    this->mass_a->AddForce(force_magnitude * dist_norm);
+    this->mass_b->AddForce(-force_magnitude * dist_norm);
 
     // --------------------- UPDATE LENGTH TERM ---------------------------
     float torque = this->angleVars.ComputeForceMagnitude();
     // we assume that the FIRST mass is the pivot and the distance to the SECOND
     //   mass is where the torque is applied
     sf::Vector2f force_rot = sf::Vector2f(
-                                -torque * -dist.y, 
-                                torque * -dist.x); //F = R x (-T) 
+                                -torque * -dist.y/2.0f, 
+                                torque * -dist.x/2.0f); //F = R x (-T) 
                                 //torque * -dist_norm.y*angle_radius, 
                                 //-torque * -dist_norm.x*angle_radius);
     //if(this->angleVars.natural != 0.0f)
@@ -178,19 +178,41 @@ void Spring::Update(float dt)
     //sf::Vector2f force_rot = sf::Vector2f(
     //                            0.0f, //torque * dist.y/2.0f, 
     //                            -torque * dist.y/2.0f); //F = T x R
+    
     this->mass_b->AddForce(force_rot);
     this->mass_a->AddForce(-force_rot);
-    //this->mass_a->AddTorque(-torque);
-    //this->mass_b->AddTorque(-torque);
+
+    //this->mass_a->AddTorque(torque);
+    //this->mass_b->AddTorque(torque);
     this->mass_b->SetRotation(this->angleVars.current); //TODO: bad, should use torque physics
+
+
+    // compute torque on the other body
+    float torque_b = dist.y*force_rot.x - dist.x*force_rot.y;
+    //this->mass_b->AddTorque(torque); //-torque_b);
 }
 
-void Spring::Draw(sf::RenderWindow& window)
+void Spring::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER)
 {
     sf::Vertex floor[] = 
     {
-        sf::Vertex(sf::Vector2f(this->mass_a->GetPosCentreX(), this->mass_a->GetPosCentreY())),
-        sf::Vertex(sf::Vector2f(this->mass_b->GetPosCentreX(), this->mass_b->GetPosCentreY()))
+        sf::Vertex(sf::Vector2f(this->mass_a->GetPosX()*PIXEL_TO_METER, this->mass_a->GetPosY()*PIXEL_TO_METER)),
+        sf::Vertex(sf::Vector2f(this->mass_b->GetPosX()*PIXEL_TO_METER, this->mass_b->GetPosY()*PIXEL_TO_METER))
     };
     window.draw(floor, 2, sf::Lines);
+}
+
+//get/set
+void Spring::SetLength(float value)
+{
+    this->lengthVars.natural = value;
+}
+float Spring::GetCurrentLength()
+{
+    return this->lengthVars.current;
+}
+void Spring::SetAngle(float value)
+{
+    this->angleVars.natural = value;
+    this->angleVars.natural_base = value;
 }

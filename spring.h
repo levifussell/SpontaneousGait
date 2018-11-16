@@ -80,7 +80,11 @@ public:
     //float ComputePrismaticForceMagnitude();
     //float ComputeRotaryTorque();
     void Update(float dt);
-    void Draw(sf::RenderWindow& window);
+    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER);
+
+    void SetLength(float value);
+    float GetCurrentLength();
+    void SetAngle(float value);
 };
 
 #endif
