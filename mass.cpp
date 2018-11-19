@@ -89,17 +89,23 @@ void Mass::UpdateGravity()
     const float gravity = 9.81f;
     //const float gravity = 200.81f;
     sf::Vector2f gravForce = sf::Vector2f(0.0f, gravity*this->mass_kg);
-    this->AddForceVisualise(gravForce);
+    this->AddForce(gravForce);
 }
+//sf::Vector2f Mass::GetGravity()
+//{
+//    const float gravity = 9.81f;
+//    sf::Vector2f gravForce = sf::Vector2f(0.0f, gravity*this->mass_kg);
+//    return gravForce;
+//}
 
 void Mass::UpdateFriction(float dt)
 {
     // add frictional forces
-    if(this->pos.y + this->ComputeRadius() >= y_floor_boundary)
+    if(this->pos.y >= y_floor_boundary)
     {
         sf::Vector2f friction = sf::Vector2f(0.0f, 0.0f);
-        float mu = 0.08f; //1.1f;
-        float beta = 15.0f; //15.0f;
+        float mu = 0.8f; //1.1f;
+        float beta = 150.0f; //15.0f;
         //friction.y = 0.008f;
         //float normal_y = 0.008f;
        
@@ -114,18 +120,18 @@ void Mass::UpdateFriction(float dt)
                 std::cout << "VELY: " << this->vel.y << "\n";
             }
         }
-        //friction.y = -1.0f*normal_y;
-        friction.y = -0.00001f*normal_y;
+        //friction.y = 1.0f*normal_y;
+        //friction.y = -0.001f*normal_y;
 
         if(this->print_data)
         {
             std::cout << "VELX: " << this->vel.x << "\n";
             std::cout << "TAN: " << -tanh(beta*this->vel.x) << "\n";
         }
-        friction.x = 1.0f * mu * normal_y * -tanh(beta * this->vel.x);
+        friction.x = 1.0f * mu * normal_y * tanh(beta * this->vel.x);
 
         this->normal_force.x = friction.x;
-        this->normal_force.y = friction.y;
+        this->normal_force.y = normal_y; //friction.y;
         //if(this->vel.x < 0.0)
         //    friction.x = mu * normal_y; // * -tanh(beta * this->vel.x);
         //else
@@ -167,20 +173,35 @@ void Mass::UpdateTorque(Mass** masses, const int MASS_COUNT)
 }
 void Mass::UpdateDynamics(float dt)
 {
-    this->pos += this->vel * dt + 0.5f * dt * dt * this->acc;
-    sf::Vector2f acc_new = this->force_total / this->mass_kg;
-    this->vel += 0.5f*(this->acc + acc_new)*dt;
-    this->acc = acc_new;
+    // Leap-frog method
+    //this->pos += this->vel * dt + 0.5f * dt * dt * this->acc;
+    //sf::Vector2f acc_new = this->force_total / this->mass_kg;
+    //this->vel += 0.5f*(this->acc + acc_new)*dt;
+    //this->acc = acc_new;
+    //sf::Vector2f v_half = this->vel + this->acc * dt * 0.5f;
+    //this->pos += v_half * dt;
+    //this->acc = this->force_total / this->mass_kg;
+    //this->vel = v_half + this->acc * dt * 0.5f;
+
+    //Runge-Kutta method
+    //float k0 = this->vel;
+    //float k1 = 
+    //this->pos = this->pos + dt/6.0f*(k0 + 2.0f*k1 + 2.0f*k2 + k3);
+
+    // Eluer's method
+    //this->acc = this->force_total / this->mass_kg;
+    //this->vel += this->acc * dt;
+    //this->pos += this->vel * dt;
 
         //rotational (for now using Euler's Method)
-    this->rotation += this->vel_angle * dt + 0.5f * dt * dt * this->acc_angle;
-    float acc_angle_new = this->torque_total / this->mom_inertia;
-    this->vel_angle += 0.5f*(this->acc_angle + acc_angle_new)*dt;
-    this->acc_angle = acc_angle_new;
+    //this->rotation += this->vel_angle * dt + 0.5f * dt * dt * this->acc_angle;
+    //float acc_angle_new = this->torque_total / this->mom_inertia;
+    //this->vel_angle += 0.5f*(this->acc_angle + acc_angle_new)*dt;
+    //this->acc_angle = acc_angle_new;
 
-    //this->acc_angle = this->torque_total / this->mom_inertia;
-    //this->vel_angle += dt * this->acc_angle;
-    //this->rotation += dt * this->vel_angle;
+    this->acc_angle = this->torque_total / this->mom_inertia;
+    this->vel_angle += dt * this->acc_angle;
+    this->rotation += dt * this->vel_angle;
 
     //this->vel_angle *= 0.9f;
 
@@ -196,14 +217,42 @@ void Mass::UpdateDynamics(float dt)
     // check that the mass has not exceeded the floor
     //   NOTE: because the circle is a point mass, only the centre 'collides'
     //     so we don't mind if it is through the floor by its radius
-    std::cout << "POS: " << this->pos.y << "\n";
-    std::cout << "FLOOR: " << y_floor_boundary << "\n";
+    //std::cout << "POS: " << this->pos.y << "\n";
+    //std::cout << "FLOOR: " << y_floor_boundary << "\n";
     if(this->pos.y >= y_floor_boundary)
     {
         this->pos.y = this->y_floor_boundary;
-        //this->vel.y = 0.0f;
+        this->vel.y = 0.0f;
     }
 }
+
+//Euler's Method
+//sf::Vector2f Mass::Pos_t_plus_delta(sf::Vector2f pos_t, sf::Vector2f vel_t, float dt)
+//{
+//    sf::Vector2f pos_t_plus_delta = pos_t + vel_t * dt;
+//    return pos_t_plus_delta;
+//}
+//sf::Vector2f Mass::Vel_t_plus_delta(sf::Vector2f vel_t, sf::Vector2f acc_t, float dt)
+//{
+//    sf::Vector2f vel_t_plus_delta = pos_t + acc_t * dt;
+//    return pos_t_plus_delta;
+//}
+
+//Verlet Method for dynamics
+//sf::Vector2f Mass::Pos_t_plus_delta(sf::Vector2f pos_t, sf::Vector2f vel_t, 
+//                                    sf::Vector2f acc_t, float dt)
+//{
+//    sf::Vector2f pos_t_plus_delta = pos_t + vel_t * dt + 0.5f * acc_t * dt * dt;
+//    return pos_t_plus_delta;
+//}
+//sf::Vector2f Mass::Vel_t_plus_delta(sf::Vector2f vel_t, sf::Vector2f acc_t, 
+//                                    sf::Vector2f acc_t_plus_delta, float dt)
+//{
+//    sf::Vector2f vel_t_plus_delta = vel_t + (acc_t + acc_t_plus_delta)* 0.5f * dt;
+//    return vel_t_plus_delta;
+//}
+
+
 void Mass::ResetForces()
 {
     //// reset the force
@@ -432,6 +481,15 @@ void Mass::DrawData(sf::RenderWindow& window, sf::Vector2f position)
     window.draw(text);
 }
 
+float Mass::ComputeAccX()
+{
+    return this->force_total.x / this->mass_kg;
+}
+float Mass::ComputeAccY()
+{
+    return this->force_total.y / this->mass_kg;
+}
+
 //get/set
 float Mass::GetPosX()
 {
@@ -457,6 +515,30 @@ float Mass::GetPosCentreX()
 float Mass::GetPosCentreY()
 {
     return this->pos.y; // + this->ComputeRadius();
+}
+void Mass::SetPos(sf::Vector2f value)
+{
+    this->pos = value;
+}
+float Mass::GetVelX()
+{
+    return this->vel.x;
+}
+float Mass::GetVelY()
+{
+    return this->vel.y;
+}
+void Mass::SetVel(sf::Vector2f value)
+{
+    this->vel = value;
+}
+float Mass::GetAccX()
+{
+    return this->acc.x;
+}
+float Mass::GetAccY()
+{
+    return this->acc.y;
 }
 float Mass::GetRotation()
 {
@@ -494,5 +576,5 @@ void Mass::SetMomOfInertia(float value)
 // private
 float Mass::ComputeRadius()
 {
-    return std::min(this->mass_kg * 60.5f, 10.0f);
+    return std::min(this->mass_kg * 120.5f, 5.0f);
 }

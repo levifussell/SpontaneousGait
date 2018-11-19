@@ -26,7 +26,7 @@ void Controller::InitModel(float FLOOR_Y)
     //float startX = 600.0f;
     //float startY = 600.0f;
     float startX = 1.0f;
-    float startY = 1.0f;
+    float startY = 1.2f;
         //body:
     
     float body_length = 0.19f;
@@ -40,14 +40,18 @@ void Controller::InitModel(float FLOOR_Y)
     float leg_rate = this->leg_offset.y/2.0f;
     this->leg_amp = sf::Vector2f(0.02f, 0.016f);
     this->alpha_ground_scalar = 1.0f;
-    float k_pri = 3.75*pow(10.0f,3);
-    float d_pri = 1.0*pow(10.0f,2);
+    float k_pri = 1.0*1.25*pow(10.0f,3);
+    float d_pri = 1.0*1.0*pow(10.0f,2);
     float k_link = 1.25*pow(10.0f,4);
     float d_link = 1.0*pow(10.0f,2);
-    float k_rot = 8.0*pow(10.0f,1);
-    float d_rot = 1.6*pow(10.0f,-2);
-    float k_spine = 8.0*pow(10.0f,1);
-    float d_spine = 1.6*pow(10.0f,-2);
+    //float k_pri = 1.0f;
+    //float d_pri = 1.0f;
+    //float k_link = 1.0f;
+    //float d_link = 1.0f;
+    float k_rot = 8.0*pow(10.0f,4);
+    float d_rot = 3.6*pow(10.0f, 1);
+    float k_spine = 8.0*pow(10.0f,4);
+    float d_spine = 3.6*pow(10.0f,1);
 
     //float mass_shoulder = 0.8f;
     //float mass_hip = 0.8f;
@@ -157,9 +161,9 @@ void Controller::InitModel(float FLOOR_Y)
     //this->leg_amp = sf::Vector2f(20.0f, 20.0f);
     //this->alpha_ground_scalar = 1.0f;
 
-    this->leg_angular_velocity = 0.0f;
-    this->support_scalar = 0.5f;
-    this->propulsion_scalar = 0.0f; //0.5f;
+    this->leg_angular_velocity = 8.0f;
+    this->support_scalar = 1.5f;
+    this->propulsion_scalar = 1.5f; //0.5f;
     this->settle_angle = 3.14152f/2.0f;
 
     // create lookup table for legs names to joints
@@ -181,7 +185,6 @@ void Controller::InitModel(float FLOOR_Y)
     this->leg_joint_indices[3][2] = 12;
 
     // load the font
-    this->font;
     this->font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf");
 }
 
@@ -262,24 +265,75 @@ void Controller::MoveRightBack(float target_length, float target_angle)
 void Controller::Update(float dt)
 {
     // update leg movement
-    //for(int i = 0; i < 4; ++i)
-    //{
-    //    this->UpdateLegPhase(this->leg_names[i], dt);
-    //    this->SetLegTarget(this->leg_names[i], this->leg_phases[i]);
-    //}
+    for(int i = 0; i < 4; ++i)
+    {
+        this->UpdateLegPhase(this->leg_names[i], dt);
+        this->SetLegTarget(this->leg_names[i], this->leg_phases[i]);
+    }
 
-    
-
+    // Compute forces for t
     for(int i = 0; i < MASS_COUNT; ++i)
         this->masses[i]->UpdateGravity();
     for(int i = 0; i < SPRING_COUNT; ++i)
         this->springs[i]->Update(dt);
-    //for(int i = 0; i < MASS_COUNT; ++i)
-    //    this->masses[i]->UpdateFriction(dt);
+    for(int i = 0; i < MASS_COUNT; ++i)
+        this->masses[i]->UpdateFriction(dt);
+
+    // store the positions, velocities, and accelerations
+    sf::Vector2f pos_t[MASS_COUNT];
+    sf::Vector2f pos_t_plus_one[MASS_COUNT];
+    sf::Vector2f vel_t[MASS_COUNT];
+    sf::Vector2f vel_t_plus_half[MASS_COUNT];
+    sf::Vector2f acc_t[MASS_COUNT];
+    for(int i = 0; i < MASS_COUNT; ++i)
+    {
+        pos_t[i] = sf::Vector2f(this->masses[i]->GetPosX(),
+                                this->masses[i]->GetPosY());
+        vel_t[i] = sf::Vector2f(this->masses[i]->GetVelX(),
+                                this->masses[i]->GetVelY());
+        acc_t[i] = sf::Vector2f(this->masses[i]->ComputeAccX(),
+                                this->masses[i]->ComputeAccY());
+        vel_t_plus_half[i] = vel_t[i] + 0.5f*dt*acc_t[i];
+        pos_t_plus_one[i] = pos_t[i] + vel_t_plus_half[i]*dt;
+    }
+
+    // we now need to compute a_(t+1) by assigning the new positions
+    //  temporarily to the masses and computing forces to update
+    for(int i = 0; i < MASS_COUNT; ++i)
+    {
+        this->masses[i]->SetPos(pos_t_plus_one[i]);
+    }
     for(int i = 0; i < MASS_COUNT; ++i)
         this->masses[i]->UpdateDynamics(dt);
     for(int i = 0; i < MASS_COUNT; ++i)
         this->masses[i]->ResetForces();
+
+    // Compute forces for t+1/2
+    for(int i = 0; i < MASS_COUNT; ++i)
+        this->masses[i]->UpdateGravity();
+    for(int i = 0; i < SPRING_COUNT; ++i)
+        this->springs[i]->Update(dt);
+    for(int i = 0; i < MASS_COUNT; ++i)
+        this->masses[i]->UpdateFriction(dt);
+
+    // now set the velocity of the mass
+    for(int i = 0; i < MASS_COUNT; ++i)
+    {
+        sf::Vector2f vel_t_plus_one;
+        vel_t_plus_one.x = vel_t_plus_half[i].x + 0.5f * dt * this->masses[i]->ComputeAccX();
+        vel_t_plus_one.y = vel_t_plus_half[i].y + 0.5f * dt * this->masses[i]->ComputeAccY();
+        this->masses[i]->SetVel(vel_t_plus_one);
+    }
+
+    for(int i = 0; i < MASS_COUNT; ++i)
+        this->masses[i]->UpdateDynamics(dt);
+    for(int i = 0; i < MASS_COUNT; ++i)
+        this->masses[i]->ResetForces();
+
+    //for(int i = 0; i < MASS_COUNT; ++i)
+    //    this->masses[i]->UpdateDynamics(dt);
+    //for(int i = 0; i < MASS_COUNT; ++i)
+    //    this->masses[i]->ResetForces();
 
     //for(int i = 0; i < MASS_COUNT; ++i)
     //    this->masses[i]->AddForce(sf::Vector2f(2.0f, 0.0f));
@@ -347,6 +401,10 @@ int Controller::GetLegIndexFromName(std::string leg_name)
 }
 
 // get/set
+float Controller::GetLegAngularVelocity()
+{
+    return this->leg_angular_velocity;
+}
 void Controller::SetLegAngularVelocity(float value)
 {
     this->leg_angular_velocity = value;

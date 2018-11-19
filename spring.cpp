@@ -155,8 +155,8 @@ void Spring::Update(float dt)
     // we assume that the FIRST mass is the pivot and the distance to the SECOND
     //   mass is where the torque is applied
     sf::Vector2f force_rot = sf::Vector2f(
-                                -torque * -dist.y/2.0f, 
-                                torque * -dist.x/2.0f); //F = R x (-T) 
+                                -torque * -dist.y, 
+                                torque * -dist.x); //F = R x (-T) 
                                 //torque * -dist_norm.y*angle_radius, 
                                 //-torque * -dist_norm.x*angle_radius);
     //if(this->angleVars.natural != 0.0f)

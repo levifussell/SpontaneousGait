@@ -56,6 +56,7 @@ public:
     void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER);
     void DrawData(sf::RenderWindow& window, sf::Vector2f position);
 
+    float GetLegAngularVelocity();
     void SetLegAngularVelocity(float value);
 };
 

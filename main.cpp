@@ -14,9 +14,9 @@
 
 const int SCREEN_WIDTH = 1300;
 const int SCREEN_HEIGHT = 800;
-const float DT = 0.000002f; //1.0f;
+const float DT = 0.0004f; //1.0f;
 
-const float PIXEL_TO_METER = 500.0f;
+const float PIXEL_TO_METER = 600.0f;
 const float FLOOR_Y = 1.3f; //(SCREEN_HEIGHT - 50.0f)/PIXEL_TO_METER;
 
 void Init(Controller* dog);
@@ -51,15 +51,17 @@ int main(int n, char** vars)
         window.clear();
 
         // move dog leg
-        dog->MoveLeftFront(sin(time)*10.0f + 40.0f, sin(time)*0.3f + 3.14152/2.0f);
-        dog->MoveLeftBack(sin(time)*10.0f + 40.0f, -sin(time)*0.3f + 3.14152/2.0f);
-        dog->MoveRightFront(sin(time)*10.0f + 40.0f, -sin(time)*0.3f + 3.14152/2.0f);
-        dog->MoveRightBack(sin(time)*10.0f + 40.0f, sin(time)*0.3f + 3.14152/2.0f);
+        //dog->MoveLeftFront(sin(time)*10.0f + 40.0f, sin(time)*0.3f + 3.14152/2.0f);
+        //dog->MoveLeftBack(sin(time)*10.0f + 40.0f, -sin(time)*0.3f + 3.14152/2.0f);
+        //dog->MoveRightFront(sin(time)*10.0f + 40.0f, -sin(time)*0.3f + 3.14152/2.0f);
+        //dog->MoveRightBack(sin(time)*10.0f + 40.0f, sin(time)*0.3f + 3.14152/2.0f);
 
         std::cout << "TIME: " << time << "\n";
-        if(time > 3.0f)
+        if(time > 0.3f)
         {
-            dog->SetLegAngularVelocity(8.0f);
+            //dog->SetLegAngularVelocity(8.0f);
+            dog->SetLegAngularVelocity(dog->GetLegAngularVelocity() + 10.0f);
+            time = 0.0f;
         }
 
         //std::cout << "prep\n";

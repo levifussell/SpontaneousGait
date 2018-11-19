@@ -54,7 +54,9 @@ public:
     void AddForceVisualise(sf::Vector2f force);
     void AddTorque(float torque);
     void UpdateGravity();
+    //sf::Vector2f GetGravity();
     void UpdateFriction(float dt);
+    //sf::Vector2f GetFriction();
     void UpdateTorque(Mass** masses, const int MASS_COUNT);
     void UpdateDynamics(float dt);
     void ResetForces();
@@ -63,10 +65,19 @@ public:
 
     void DrawData(sf::RenderWindow& window, sf::Vector2f position);
 
+    float ComputeAccX();
+    float ComputeAccY();
+
     float GetPosX();
     float GetPosY();
     float GetPosCentreX();
     float GetPosCentreY();
+    void SetPos(sf::Vector2f value);
+    float GetVelX();
+    float GetVelY(); 
+    void SetVel(sf::Vector2f value);
+    float GetAccX();
+    float GetAccY();
     void SetStationary(sf::Vector2f position);
     float GetRotation();
     void SetRotation(float value);
