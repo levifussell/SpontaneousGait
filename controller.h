@@ -12,8 +12,11 @@
 class Controller
 {
 private:
-    static const int MASS_COUNT = 13;
-    static const int SPRING_COUNT = 12;
+    //static const int MASS_COUNT = 13;
+    //static const int MASS_COUNT = 14;
+    static const int MASS_COUNT = 15;
+    //static const int SPRING_COUNT = 14;
+    static const int SPRING_COUNT = 14;
     Mass *masses[MASS_COUNT];
     Spring *springs[SPRING_COUNT];
 
@@ -34,6 +37,8 @@ private:
     void SetLegTarget(int femur_idx, int knee_idx, float phase);
     void UpdateLegPhase(std::string leg_name, float dt);
 
+    float ComputeCentreOfMass(bool isX);
+
     int GetLegIndexFromName(std::string leg_name);
     
 public:
@@ -53,8 +58,11 @@ public:
     void MoveRightBack(float target_length, float target_angle);
 
     void Update(float dt);
-    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER);
-    void DrawData(sf::RenderWindow& window, sf::Vector2f position);
+    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET);
+    void DrawData(sf::RenderWindow& window, sf::Vector2f position, float time);
+
+    float ComputeCentreOfMassX();
+    float ComputeCentreOfMassY();
 
     float GetLegAngularVelocity();
     void SetLegAngularVelocity(float value);

@@ -28,6 +28,7 @@ Spring::Spring(float natural_length, float length_spring_const, float length_dam
     this->angleVars.spring_const = angle_spring_const;
     this->angleVars.damp_const = angle_damp_const;
     this->angle_radius = angle_radius;
+    this->b_mass_angle_offset = 0.0f;
 
     this->mass_a = mass_a;
     this->mass_b = mass_b;
@@ -89,6 +90,8 @@ void Spring::Init()
 
     this->mass_a = NULL;
     this->mass_b = NULL;
+
+    this->debug_mode = false;
 }
 
 //float Spring::ComputeForceMagnitude() {}
@@ -97,7 +100,7 @@ void Spring::Init()
 //    return this->prism_spring_const * (this->natural_length - this->current_length) - this->damp_spring_const * this->current_velocity;
 //}
 
-void Spring::Update(float dt)
+void Spring::Update(float dt, bool skip_internal_update)
 {
     sf::Vector2f dist = sf::Vector2f(
                             this->mass_a->GetPosCentreX() - this->mass_b->GetPosCentreX(), 
@@ -106,6 +109,7 @@ void Spring::Update(float dt)
     this->lengthVars.current_previous = this->lengthVars.current;
     this->lengthVars.current = pow(dist.x*dist.x + dist.y*dist.y, 0.5f);
 
+
     // update the angle of the spring according to the masses
     this->angleVars.current_previous = this->angleVars.current;
     double two_pi = 2.0f * 3.1415f;
@@ -113,14 +117,15 @@ void Spring::Update(float dt)
     //float comp_angle = atan2(-dist.y, -dist.x) - this->mass_a->GetRotation();
     //float comp_angle = this->mass_a->GetRotation() - this->angle_init;
     this->angleVars.current = comp_angle;
+    if(this->debug_mode && !skip_internal_update)
+    {
+        std::cout << "ANG BEFORE: " << this->angleVars.current << "\n";
+        std::cout << "ANG NATURAL: " << this->angleVars.natural << "\n";
+    }
     if(comp_angle < 0)
         this->angleVars.current = comp_angle + two_pi;
     else
         this->angleVars.current = comp_angle;
-
-    //TODO: currently all target angles are relative to the frame of the background.
-    //  These need to be changed so that angles are relative to the actuator mass they
-    //  are attached to. To do this, the mass points must rotate as they are pullled.
 
     // below is to deal with edge cases of angles and make sure we turn the 
     //   direction which is the shortest path to the target angle
@@ -134,6 +139,8 @@ void Spring::Update(float dt)
 
     // update natural
     this->angleVars.natural = this->angleVars.natural_base + this->mass_a->GetRotation();
+    if(this->angleVars.natural > two_pi)
+        this->angleVars.natural -= two_pi;
  
     // compute approximate velocity
     this->lengthVars.UpdateVelocity(dt);
@@ -184,20 +191,27 @@ void Spring::Update(float dt)
 
     //this->mass_a->AddTorque(torque);
     //this->mass_b->AddTorque(torque);
-    this->mass_b->SetRotation(this->angleVars.current); //TODO: bad, should use torque physics
+    //this->mass_b->SetRotation(this->angleVars.current); //TODO: bad, should use torque physics
+    if(!skip_internal_update)
+        this->mass_b->SetRotation(this->angleVars.current + this->b_mass_angle_offset); //TODO: bad, should use torque physics
 
+    if(this->debug_mode && !skip_internal_update)
+    {
+        std::cout << "ANG AFTER: " << this->angleVars.current << "\n";
+        std::cout << "\tBMASS: " << this->mass_b->GetRotation() << "\n";
+    }
 
     // compute torque on the other body
-    float torque_b = dist.y*force_rot.x - dist.x*force_rot.y;
+    //float torque_b = dist.y*force_rot.x - dist.x*force_rot.y;
     //this->mass_b->AddTorque(torque); //-torque_b);
 }
 
-void Spring::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER)
+void Spring::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET)
 {
     sf::Vertex floor[] = 
     {
-        sf::Vertex(sf::Vector2f(this->mass_a->GetPosX()*PIXEL_TO_METER, this->mass_a->GetPosY()*PIXEL_TO_METER)),
-        sf::Vertex(sf::Vector2f(this->mass_b->GetPosX()*PIXEL_TO_METER, this->mass_b->GetPosY()*PIXEL_TO_METER))
+        sf::Vertex(sf::Vector2f(this->mass_a->GetPosX()*PIXEL_TO_METER, this->mass_a->GetPosY()*PIXEL_TO_METER) + POS_OFFSET),
+        sf::Vertex(sf::Vector2f(this->mass_b->GetPosX()*PIXEL_TO_METER, this->mass_b->GetPosY()*PIXEL_TO_METER) + POS_OFFSET)
     };
     window.draw(floor, 2, sf::Lines);
 }
@@ -215,4 +229,12 @@ void Spring::SetAngle(float value)
 {
     this->angleVars.natural = value;
     this->angleVars.natural_base = value;
+}
+void Spring::SetBMassAngleOffset(float value)
+{
+    this->b_mass_angle_offset = value;
+}
+void Spring::TurnOnDebug()
+{
+    this->debug_mode = true;
 }

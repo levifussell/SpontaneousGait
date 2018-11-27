@@ -46,12 +46,15 @@ protected:
     SpringVariables angleVars;
     float angle_radius;
     float angle_init; //init angle for actuating joint
+    float b_mass_angle_offset;
     //float natural_length;
     //float current_length;
     //float current_length_previous; //used to compute approx. velocity
     //float current_velocity;
     //float prism_spring_const;
     //float damp_spring_const;
+
+    bool debug_mode;
 
     // for rotorary actuation
 
@@ -79,12 +82,14 @@ public:
     //virtual float ComputePrismaticForceMagnitude();
     //float ComputePrismaticForceMagnitude();
     //float ComputeRotaryTorque();
-    void Update(float dt);
-    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER);
+    void Update(float dt, bool skip_internal_update);
+    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET);
 
     void SetLength(float value);
     float GetCurrentLength();
     void SetAngle(float value);
+    void SetBMassAngleOffset(float value);
+    void TurnOnDebug();
 };
 
 #endif

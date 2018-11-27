@@ -16,7 +16,7 @@
 
 const int SCREEN_WIDTH = 1300;
 const int SCREEN_HEIGHT = 800;
-const float DT = 0.005f; //1.0f;
+const float DT = 0.00005f; //1.0f;
 const float FLOOR_Y = SCREEN_HEIGHT - 50.0f;
 
 const int MASS_COUNT = 3;
@@ -91,11 +91,15 @@ void Init(Mass* masses[MASS_COUNT], Spring* springs[SPRING_COUNT])
     float s_a_d = 3.6f;
     float s_r = 1.0f;
     springs[0] = new Spring(s_length, s_k, s_d,
-                            3.14152f/2.0f, s_a_k, s_a_d, s_r,
+                            3.14152f, s_a_k, s_a_d, s_r,
                             masses[1], masses[0]);
+    springs[0]->SetBMassAngleOffset(-3.14152f/1.0f);
+    springs[0]->TurnOnDebug();
     springs[1] = new Spring(s_length, s_k, s_d,
-                            s_angle, s_a_k, s_a_d, s_r,
-                            masses[1], masses[2]);
+                            3.14152f, s_a_k, s_a_d, s_r,
+                            masses[2], masses[1]);
+    springs[1]->SetBMassAngleOffset(-3.14152f/1.0f);
+    //springs[1]->TurnOnDebug();
     //springs[2] = new Spring(s_length, s_k, s_d,
     //                        s_angle, s_a_k, s_a_d, s_r,
     //                        masses[2], masses[3]);
@@ -114,28 +118,39 @@ void CleanUp(Mass* masses[MASS_COUNT], Spring* springs[SPRING_COUNT])
 
 void Update(Mass* masses[MASS_COUNT], Spring* springs[SPRING_COUNT])
 {
+    std::cout << "-------------------------------------------------------------------\n";
     //for(int i = 0; i < MASS_COUNT; ++i)
     //    masses[i]->Update(DT, masses, MASS_COUNT);
     for(int i = 0; i < MASS_COUNT; ++i)
         masses[i]->UpdateGravity();
-    for(int i = 0; i < MASS_COUNT; ++i)
-        masses[i]->UpdateTorque(masses, MASS_COUNT);
+    //for(int i = 0; i < MASS_COUNT; ++i)
+        //masses[i]->UpdateTorque(masses, MASS_COUNT);
     for(int i = 0; i < SPRING_COUNT; ++i)
-        springs[i]->Update(DT);
+        springs[i]->Update(DT, false);
     for(int i = 0; i < MASS_COUNT; ++i)
         masses[i]->UpdateFriction(DT);
     for(int i = 0; i < MASS_COUNT; ++i)
         masses[i]->UpdateDynamics(DT);
+
+    for(int i = 0; i < MASS_COUNT; ++i)
+    {
+        sf::Vector2f acc = sf::Vector2f(masses[i]->ComputeAccX(), masses[i]->ComputeAccY());
+        masses[i]->SetVel(sf::Vector2f(masses[i]->GetVelX() + acc.x*DT, masses[i]->GetVelY() + acc.y*DT));
+        masses[i]->SetPos(sf::Vector2f(masses[i]->GetPosX() + masses[i]->GetVelX()*DT, masses[i]->GetPosY() + masses[i]->GetVelY()*DT));
+    }
+
     for(int i = 0; i < MASS_COUNT; ++i)
         masses[i]->ResetForces();
 }
 
 void Draw(sf::RenderWindow& window, Mass* masses[MASS_COUNT], Spring* springs[SPRING_COUNT])
 {
+    float m_scale = 1.0f;
+    sf::Vector2f cam = sf::Vector2f(0.0f, 0.0f);
     for(int i = 0; i < MASS_COUNT; ++i)
-        masses[i]->Draw(window);
+        masses[i]->Draw(window, m_scale, cam);
     for(int i = 0; i < SPRING_COUNT; ++i)
-        springs[i]->Draw(window);
+        springs[i]->Draw(window, m_scale, cam);
 
     // draw the floor
     sf::Vertex floor[] = 

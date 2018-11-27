@@ -61,7 +61,7 @@ public:
     void UpdateDynamics(float dt);
     void ResetForces();
     void Update(float dt, Mass** masses, const int MASS_COUNT);
-    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER);
+    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET);
 
     void DrawData(sf::RenderWindow& window, sf::Vector2f position);
 

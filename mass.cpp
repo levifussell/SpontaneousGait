@@ -105,7 +105,7 @@ void Mass::UpdateFriction(float dt)
     {
         sf::Vector2f friction = sf::Vector2f(0.0f, 0.0f);
         float mu = 0.8f; //1.1f;
-        float beta = 150.0f; //15.0f;
+        float beta = 15.0f; //15.0f;
         //friction.y = 0.008f;
         //float normal_y = 0.008f;
        
@@ -403,27 +403,28 @@ void Mass::Update(float dt, Mass** masses, const int MASS_COUNT)
     this->torque_total = 0.0f;
 }
 
-void Mass::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER)
+void Mass::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, 
+                sf::Vector2f POS_OFFSET)
 {
     // point mass is just a point. We make this a circle (with no collisions),
     //   where the radius is proportional to the mass.
     sf::CircleShape circ = sf::CircleShape(this->ComputeRadius());
     //circ.setPosition(this->pos*PIXEL_TO_METER);
-    circ.setPosition(sf::Vector2f(this->pos.x*PIXEL_TO_METER - this->ComputeRadius(), this->pos.y*PIXEL_TO_METER - this->ComputeRadius()));
+    circ.setPosition(sf::Vector2f(this->pos.x*PIXEL_TO_METER - this->ComputeRadius(), this->pos.y*PIXEL_TO_METER - this->ComputeRadius()) + POS_OFFSET);
     circ.setFillColor(this->color);
 
     window.draw(circ);
 
     // draw a line denoting rotation
-    //float rot_x = cos(this->rotation) * this->ComputeRadius();
-    //float rot_y = sin(this->rotation) * this->ComputeRadius();
-    //sf::Color c_rot = sf::Color(255.0f, 255.0f, 255.0f, 255.0f);
-    //sf::Vertex floor[] = 
-    //{
-    //    sf::Vertex(sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER, c_rot),
-    //    sf::Vertex(sf::Vector2f(this->GetPosCentreX() + rot_x, this->GetPosCentreY() + rot_y)*PIXEL_TO_METER, c_rot)
-    //};
-    //window.draw(floor, 2, sf::Lines);
+    float rot_x = cos(this->rotation) * this->ComputeRadius();
+    float rot_y = sin(this->rotation) * this->ComputeRadius();
+    sf::Color c_rot = sf::Color(255.0f, 255.0f, 255.0f, 255.0f);
+    sf::Vertex floor[] = 
+    {
+        sf::Vertex(sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER + POS_OFFSET, c_rot),
+        sf::Vertex(sf::Vector2f(this->GetPosCentreX()*PIXEL_TO_METER + rot_x, this->GetPosCentreY()*PIXEL_TO_METER + rot_y) + POS_OFFSET, c_rot)
+    };
+    window.draw(floor, 2, sf::Lines);
 
     // draw debug forces
     if(this->debug_forces)
@@ -431,7 +432,7 @@ void Mass::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER)
         for(int f = 0; f < this->arr_idx; ++f)
         {
             sf::Color f_col = sf::Color(255.0f, 125.0f, 0.0f, 255.0f);
-            sf::Vector2f cent = sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER;
+            sf::Vector2f cent = sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER + POS_OFFSET;
             sf::Vertex force[] =
             {
                 sf::Vertex(cent, f_col),
@@ -576,5 +577,5 @@ void Mass::SetMomOfInertia(float value)
 // private
 float Mass::ComputeRadius()
 {
-    return std::min(this->mass_kg * 120.5f, 5.0f);
+    return std::min(this->mass_kg * 80.5f, 15.0f);
 }
