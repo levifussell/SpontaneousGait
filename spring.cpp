@@ -102,12 +102,13 @@ void Spring::Init()
 
 void Spring::Update(float dt, bool skip_internal_update)
 {
-    sf::Vector2f dist = sf::Vector2f(
+    sf::Vector3f dist = sf::Vector3f(
                             this->mass_a->GetPosCentreX() - this->mass_b->GetPosCentreX(), 
-                            this->mass_a->GetPosCentreY() - this->mass_b->GetPosCentreY());
+                            this->mass_a->GetPosCentreY() - this->mass_b->GetPosCentreY(),
+                            this->mass_a->GetPosCentreZ() - this->mass_b->GetPosCentreZ());
     // update the length of the spring according to the masses
     this->lengthVars.current_previous = this->lengthVars.current;
-    this->lengthVars.current = pow(dist.x*dist.x + dist.y*dist.y, 0.5f);
+    this->lengthVars.current = pow(dist.x*dist.x + dist.y*dist.y + dist.z*dist.z, 0.5f);
 
 
     // update the angle of the spring according to the masses
@@ -151,9 +152,10 @@ void Spring::Update(float dt, bool skip_internal_update)
     // --------------------- UPDATE LENGTH TERM ---------------------------
     //float force_magnitude = this->ComputeForceMagnitude();
     float force_magnitude = this->lengthVars.ComputeForceMagnitude();
-    sf::Vector2f dist_norm = sf::Vector2f(
+    sf::Vector3f dist_norm = sf::Vector3f(
                             dist.x / this->lengthVars.current, 
-                            dist.y / this->lengthVars.current);
+                            dist.y / this->lengthVars.current,
+                            dist.z / this->lengthVars.current);
     this->mass_a->AddForce(force_magnitude * dist_norm);
     this->mass_b->AddForce(-force_magnitude * dist_norm);
 
@@ -161,9 +163,10 @@ void Spring::Update(float dt, bool skip_internal_update)
     float torque = this->angleVars.ComputeForceMagnitude();
     // we assume that the FIRST mass is the pivot and the distance to the SECOND
     //   mass is where the torque is applied
-    sf::Vector2f force_rot = sf::Vector2f(
+    sf::Vector3f force_rot = sf::Vector3f(
                                 -torque * -dist.y, 
-                                torque * -dist.x); //F = R x (-T) 
+                                torque * -dist.x,
+                                0.0f); //F = R x (-T) 
                                 //torque * -dist_norm.y*angle_radius, 
                                 //-torque * -dist_norm.x*angle_radius);
     //if(this->angleVars.natural != 0.0f)
@@ -206,14 +209,25 @@ void Spring::Update(float dt, bool skip_internal_update)
     //this->mass_b->AddTorque(torque); //-torque_b);
 }
 
-void Spring::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET)
+void Spring::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector3f POS_OFFSET)
 {
-    sf::Vertex floor[] = 
-    {
-        sf::Vertex(sf::Vector2f(this->mass_a->GetPosX()*PIXEL_TO_METER, this->mass_a->GetPosY()*PIXEL_TO_METER) + POS_OFFSET),
-        sf::Vertex(sf::Vector2f(this->mass_b->GetPosX()*PIXEL_TO_METER, this->mass_b->GetPosY()*PIXEL_TO_METER) + POS_OFFSET)
-    };
-    window.draw(floor, 2, sf::Lines);
+    //sf::Vertex floor[] = 
+    //{
+    //    sf::Vertex(sf::Vector2f(this->mass_a->GetPosX()*PIXEL_TO_METER, this->mass_a->GetPosY()*PIXEL_TO_METER) + POS_OFFSET),
+    //    sf::Vertex(sf::Vector2f(this->mass_b->GetPosX()*PIXEL_TO_METER, this->mass_b->GetPosY()*PIXEL_TO_METER) + POS_OFFSET)
+    //};
+    //window.draw(floor, 2, sf::Lines);
+    ThreeDUtils::DrawLine(
+            sf::Vector3f(
+                this->mass_a->GetPosX()*PIXEL_TO_METER,
+                this->mass_a->GetPosY()*PIXEL_TO_METER,
+                this->mass_a->GetPosZ()),
+            sf::Vector3f(
+                this->mass_b->GetPosX()*PIXEL_TO_METER,
+                this->mass_b->GetPosY()*PIXEL_TO_METER,
+                this->mass_b->GetPosZ()),
+            sf::Color(1.0f, 1.0f, 1.0f));
+                        
 }
 
 //get/set

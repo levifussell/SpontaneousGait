@@ -5,7 +5,7 @@ Mass::Mass()
     this->Init();
 }
 
-Mass::Mass(sf::Vector2f pos_init, float mass_kg, float y_floor_boundary)
+Mass::Mass(sf::Vector3f pos_init, float mass_kg, float y_floor_boundary)
 {
     this->Init();
 
@@ -18,7 +18,7 @@ Mass::Mass(sf::Vector2f pos_init, float mass_kg, float y_floor_boundary)
     this->color = sf::Color(255.0f, 0.0f, 0.0f, 255.0f);
 }
 
-Mass::Mass(sf::Vector2f pos_init, float mass_kg, float y_floor_boundary, sf::Color color)
+Mass::Mass(sf::Vector3f pos_init, float mass_kg, float y_floor_boundary, sf::Color color)
 {
     this->Init();
 
@@ -33,10 +33,10 @@ Mass::Mass(sf::Vector2f pos_init, float mass_kg, float y_floor_boundary, sf::Col
 
 void Mass::Init()
 {
-    this->pos = sf::Vector2f(0.0f, 0.0f);
-    this->vel = sf::Vector2f(0.0f, 0.0f);
-    this->acc = sf::Vector2f(0.0f, 0.0f);
-    this->force_total = sf::Vector2f(0.0f, 0.0f);
+    this->pos = sf::Vector3f(0.0f, 0.0f, 0.0f);
+    this->vel = sf::Vector3f(0.0f, 0.0f, 0.0f);
+    this->acc = sf::Vector3f(0.0f, 0.0f, 0.0f);
+    this->force_total = sf::Vector3f(0.0f, 0.0f, 0.0f);
     this->mass_kg = 1.0f;
 
     this->rotation = 0.0f;
@@ -44,10 +44,10 @@ void Mass::Init()
     this->torque_total = 0.0f;
     this->mom_inertia = this->mass_kg; //TODO: copmute real moment of inertia
 
-    this->normal_force = sf::Vector2f(0.0f, 0.0f);
+    this->normal_force = sf::Vector3f(0.0f, 0.0f, 0.0f);
 
     // historical
-    this->old_force_total = sf::Vector2f(0.0f, 0.0f);
+    this->old_force_total = sf::Vector3f(0.0f, 0.0f, 0.0f);
     this->old_torque_total = 0.0f;
 
     this->y_floor_boundary = 0.0f;
@@ -58,19 +58,19 @@ void Mass::Init()
     this->print_data = false;
 }
 
-void Mass::AddForce(sf::Vector2f force)
+void Mass::AddForce(sf::Vector3f force)
 {
     this->force_total += force;
 
 }
-void Mass::AddForcePositional(sf::Vector2f force, sf::Vector2f radius)
+void Mass::AddForcePositional(sf::Vector3f force, sf::Vector3f radius)
 {
     this->AddForce(force);
 
     //float torque = radius.x * force.y - radius.y * force.x;
     //this->AddTorque(torque);
 }
-void Mass::AddForceVisualise(sf::Vector2f force)
+void Mass::AddForceVisualise(sf::Vector3f force)
 {
     this->AddForce(force);
 
@@ -88,7 +88,7 @@ void Mass::UpdateGravity()
     // add gravity to the mass
     const float gravity = 9.81f;
     //const float gravity = 200.81f;
-    sf::Vector2f gravForce = sf::Vector2f(0.0f, gravity*this->mass_kg);
+    sf::Vector3f gravForce = sf::Vector3f(0.0f, -gravity*this->mass_kg, 0.0f);
     this->AddForce(gravForce);
 }
 //sf::Vector2f Mass::GetGravity()
@@ -101,18 +101,18 @@ void Mass::UpdateGravity()
 void Mass::UpdateFriction(float dt)
 {
     // add frictional forces
-    if(this->pos.y >= y_floor_boundary)
+    if(this->pos.y <= y_floor_boundary)
     {
-        sf::Vector2f friction = sf::Vector2f(0.0f, 0.0f);
+        sf::Vector3f friction = sf::Vector3f(0.0f, 0.0f, 0.0f);
         float mu = 0.8f; //1.1f;
         float beta = 15.0f; //15.0f;
         //friction.y = 0.008f;
         //float normal_y = 0.008f;
        
         float normal_y = 0.0f;
-        if(this->force_total.y >= 0.0)
+        if(this->force_total.y <= 0.0)
         {
-            normal_y = -this->force_total.y + (1.0/dt)*this->mass_kg*this->vel.y;
+            normal_y = -this->force_total.y - (1.0/dt)*this->mass_kg*this->vel.y;
             if(this->print_data)
             {
                 std::cout << "NORM: " << normal_y << "\n";
@@ -128,7 +128,7 @@ void Mass::UpdateFriction(float dt)
             std::cout << "VELX: " << this->vel.x << "\n";
             std::cout << "TAN: " << -tanh(beta*this->vel.x) << "\n";
         }
-        friction.x = 1.0f * mu * normal_y * tanh(beta * this->vel.x);
+        friction.x = -1.0f * mu * normal_y * tanh(beta * this->vel.x);
 
         this->normal_force.x = friction.x;
         this->normal_force.y = normal_y; //friction.y;
@@ -140,7 +140,7 @@ void Mass::UpdateFriction(float dt)
     }
     else
     {
-        this->normal_force = sf::Vector2f(0.0f, 0.0f);
+        this->normal_force = sf::Vector3f(0.0f, 0.0f, 0.0f);
     }
 }
 void Mass::UpdateTorque(Mass** masses, const int MASS_COUNT)
@@ -164,7 +164,7 @@ void Mass::UpdateTorque(Mass** masses, const int MASS_COUNT)
             //float torque = distX * masses[j]->GetTotalForcesY() - distY * masses[j]->GetTotalForcesX();
             float torque = distX * f_perp*perpX/length - distY * f_perp*perpY/length;
             std::cout << "TOR:" << torque << "\n";
-            this->AddForce(sf::Vector2f(f_perp*perpX/length, f_perp*perpY/length)/1000.0f);
+            this->AddForce(sf::Vector3f(f_perp*perpX/length, f_perp*perpY/length, 0.0f)/1000.0f);
             //this->AddTorque(torque/10000.0f);
             //this->AddTorque(torque/10000.0f);
         }
@@ -219,7 +219,7 @@ void Mass::UpdateDynamics(float dt)
     //     so we don't mind if it is through the floor by its radius
     //std::cout << "POS: " << this->pos.y << "\n";
     //std::cout << "FLOOR: " << y_floor_boundary << "\n";
-    if(this->pos.y >= y_floor_boundary)
+    if(this->pos.y <= y_floor_boundary)
     {
         this->pos.y = this->y_floor_boundary;
         this->vel.y = 0.0f;
@@ -258,8 +258,10 @@ void Mass::ResetForces()
     //// reset the force
     this->old_force_total.x = this->force_total.x;
     this->old_force_total.y = this->force_total.y;
+    this->old_force_total.z = this->force_total.z;
     this->force_total.x = 0.0f;
     this->force_total.y = 0.0f;
+    this->force_total.z = 0.0f;
     this->old_torque_total = torque_total;
     this->torque_total = 0.0f;
 }
@@ -274,13 +276,13 @@ void Mass::Update(float dt, Mass** masses, const int MASS_COUNT)
     // add gravity to the mass
     const float gravity = 9.81f;
     //const float gravity = 200.81f;
-    sf::Vector2f gravForce = sf::Vector2f(0.0f, gravity*this->mass_kg);
+    sf::Vector3f gravForce = sf::Vector3f(0.0f, gravity*this->mass_kg, 0.0f);
     this->AddForceVisualise(gravForce);
 
     // add frictional forces
     if(this->pos.y + this->ComputeRadius() >= y_floor_boundary)
     {
-        sf::Vector2f friction = sf::Vector2f(0.0f, 0.0f);
+        sf::Vector3f friction = sf::Vector3f(0.0f, 0.0f, 0.0f);
         float mu = 0.8f; //1.1f;
         float beta = 1005.0f; //15.0f;
         //friction.y = 0.008f;
@@ -316,7 +318,7 @@ void Mass::Update(float dt, Mass** masses, const int MASS_COUNT)
     }
     else
     {
-        this->normal_force = sf::Vector2f(0.0f, 0.0f);
+        this->normal_force = sf::Vector3f(0.0f, 0.0f, 0.0f);
     }
     //else
     //{
@@ -367,7 +369,7 @@ void Mass::Update(float dt, Mass** masses, const int MASS_COUNT)
     //this->acc = this->force_total / this->mass_kg;
     //this->vel = vel_half + dt/2.0f * this->acc;
     this->pos += this->vel * dt + 0.5f * dt * dt * this->acc;
-    sf::Vector2f acc_new = this->force_total / this->mass_kg;
+    sf::Vector3f acc_new = this->force_total / this->mass_kg;
     this->vel += 0.5f*(this->acc + acc_new)*dt;
     this->acc = acc_new;
 
@@ -397,57 +399,101 @@ void Mass::Update(float dt, Mass** masses, const int MASS_COUNT)
     //// reset the force
     this->old_force_total.x = this->force_total.x;
     this->old_force_total.y = this->force_total.y;
+    this->old_force_total.z = this->force_total.z;
     this->force_total.x = 0.0f;
     this->force_total.y = 0.0f;
+    this->force_total.z = 0.0f;
     this->old_torque_total = torque_total;
     this->torque_total = 0.0f;
 }
 
 void Mass::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, 
-                sf::Vector2f POS_OFFSET)
+                sf::Vector3f POS_OFFSET)
 {
     // point mass is just a point. We make this a circle (with no collisions),
     //   where the radius is proportional to the mass.
-    sf::CircleShape circ = sf::CircleShape(this->ComputeRadius());
-    //circ.setPosition(this->pos*PIXEL_TO_METER);
-    circ.setPosition(sf::Vector2f(this->pos.x*PIXEL_TO_METER - this->ComputeRadius(), this->pos.y*PIXEL_TO_METER - this->ComputeRadius()) + POS_OFFSET);
-    circ.setFillColor(this->color);
+    //sf::CircleShape circ = sf::CircleShape(this->ComputeRadius());
+    ////circ.setPosition(this->pos*PIXEL_TO_METER);
+    //circ.setPosition(sf::Vector3f(
+    //                this->pos.x*PIXEL_TO_METER - this->ComputeRadius(), 
+    //                this->pos.y*PIXEL_TO_METER - this->ComputeRadius()) + POS_OFFSET);
+    //circ.setFillColor(this->color);
 
-    window.draw(circ);
+    //window.draw(circ);
+    ThreeDUtils::DrawCube(
+                      sf::Vector3f(
+                           this->pos.x*PIXEL_TO_METER,
+                           this->pos.y*PIXEL_TO_METER,
+                           this->pos.z) + POS_OFFSET,
+    //ThreeDUtils::DrawCube(
+    //                    sf::Vector3f(-10.0f, 0.0f, -90.0f),
+                        this->ComputeRadius(),
+                        this->color,
+                        //sf::Vector3f(this->rotation, 0.0f, 0.0f));
+                        sf::Vector3f(0.0f, 0.0f, this->rotation));
 
     // draw a line denoting rotation
     float rot_x = cos(this->rotation) * this->ComputeRadius();
     float rot_y = sin(this->rotation) * this->ComputeRadius();
-    sf::Color c_rot = sf::Color(255.0f, 255.0f, 255.0f, 255.0f);
-    sf::Vertex floor[] = 
-    {
-        sf::Vertex(sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER + POS_OFFSET, c_rot),
-        sf::Vertex(sf::Vector2f(this->GetPosCentreX()*PIXEL_TO_METER + rot_x, this->GetPosCentreY()*PIXEL_TO_METER + rot_y) + POS_OFFSET, c_rot)
-    };
-    window.draw(floor, 2, sf::Lines);
+    sf::Color c_rot = sf::Color(0.0f, 0.0f, 0.0f);
+    //sf::Vertex floor[] = 
+    //{
+    //    sf::Vertex(sf::Vector3f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER + POS_OFFSET, c_rot),
+    //    sf::Vertex(sf::Vector3f(this->GetPosCentreX()*PIXEL_TO_METER + rot_x, this->GetPosCentreY()*PIXEL_TO_METER + rot_y) + POS_OFFSET, c_rot)
+    //};
+    ThreeDUtils::DrawLine(
+            sf::Vector3f(this->GetPosCentreX()*PIXEL_TO_METER, 
+                            this->GetPosCentreY()*PIXEL_TO_METER, 
+                            this->GetPosCentreZ()),
+            sf::Vector3f(this->GetPosCentreX()*PIXEL_TO_METER + rot_x, 
+                            this->GetPosCentreY()*PIXEL_TO_METER + rot_y,
+                            this->GetPosCentreZ()),
+            c_rot);
+
+    //window.draw(floor, 2, sf::Lines);
 
     // draw debug forces
     if(this->debug_forces)
     {
+        sf::Vector3f cent = sf::Vector3f(
+                            this->GetPosCentreX()*PIXEL_TO_METER, 
+                            this->GetPosCentreY()*PIXEL_TO_METER,
+                            this->GetPosCentreZ());
+        sf::Color f_col = sf::Color(255.0f, 125.0f, 0.0f, 255.0f);
         for(int f = 0; f < this->arr_idx; ++f)
         {
-            sf::Color f_col = sf::Color(255.0f, 125.0f, 0.0f, 255.0f);
-            sf::Vector2f cent = sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY())*PIXEL_TO_METER + POS_OFFSET;
-            sf::Vertex force[] =
-            {
-                sf::Vertex(cent, f_col),
-                sf::Vertex(cent + 
-                        sf::Vector2f(this->forces_list[f].x, this->forces_list[f].y)*PIXEL_TO_METER, f_col)
-            };
-            window.draw(force, 2, sf::Lines);
+            //sf::Vertex force[] =
+            //{
+            //    sf::Vertex(cent, f_col),
+            //    sf::Vertex(cent + 
+            //            sf::Vector3f(this->forces_list[f].x, this->forces_list[f].y)*PIXEL_TO_METER, f_col)
+            //};
+            //window.draw(force, 2, sf::Lines);
+            ThreeDUtils::DrawLine(
+                    cent,
+                    cent + sf::Vector3f(
+                        this->forces_list[f].x*PIXEL_TO_METER,
+                        this->forces_list[f].y*PIXEL_TO_METER,
+                        this->forces_list[f].z
+                        ),
+                    f_col
+                    );
         }
         this->arr_idx = 0;
+        ThreeDUtils::DrawLine(
+                cent,
+                cent + sf::Vector3f(
+                    this->normal_force.x*PIXEL_TO_METER,
+                    this->normal_force.y*PIXEL_TO_METER,
+                    this->normal_force.z),
+                f_col
+                );
         //sf::Color f_col = sf::Color(255.0f, 125.0f, 0.0f, 255.0f);
         //sf::Vector2f cent = sf::Vector2f(this->GetPosCentreX(), this->GetPosCentreY());
         //sf::Vertex force[] =
         //{
         //    sf::Vertex(cent, f_col),
-        //    sf::Vertex(cent + this->force_total*10.0f, f_col)
+      //    sf::Vertex(cent + this->force_total*10.0f, f_col)
         //};
         //window.draw(force, 2, sf::Lines);
     }
@@ -490,6 +536,10 @@ float Mass::ComputeAccY()
 {
     return this->force_total.y / this->mass_kg;
 }
+float Mass::ComputeAccZ()
+{
+    return this->force_total.z / this->mass_kg;
+}
 
 //get/set
 float Mass::GetPosX()
@@ -500,13 +550,19 @@ float Mass::GetPosY()
 {
     return this->pos.y;
 }
-void Mass::SetStationary(sf::Vector2f position)
+float Mass::GetPosZ()
+{
+    return this->pos.z;
+}
+void Mass::SetStationary(sf::Vector3f position)
 {
     this->pos = position;
     this->vel.x = 0.0f;
     this->vel.y = 0.0f;
+    this->vel.z = 0.0f;
     this->acc.x = 0.0f;
     this->acc.y = 0.0f;
+    this->acc.z = 0.0f;
 }
 
 float Mass::GetPosCentreX()
@@ -517,7 +573,11 @@ float Mass::GetPosCentreY()
 {
     return this->pos.y; // + this->ComputeRadius();
 }
-void Mass::SetPos(sf::Vector2f value)
+float Mass::GetPosCentreZ()
+{
+    return this->pos.z; // + this->ComputeRadius();
+}
+void Mass::SetPos(sf::Vector3f value)
 {
     this->pos = value;
 }
@@ -529,7 +589,11 @@ float Mass::GetVelY()
 {
     return this->vel.y;
 }
-void Mass::SetVel(sf::Vector2f value)
+float Mass::GetVelZ()
+{
+    return this->vel.z;
+}
+void Mass::SetVel(sf::Vector3f value)
 {
     this->vel = value;
 }
@@ -540,6 +604,10 @@ float Mass::GetAccX()
 float Mass::GetAccY()
 {
     return this->acc.y;
+}
+float Mass::GetAccZ()
+{
+    return this->acc.z;
 }
 float Mass::GetRotation()
 {
@@ -557,6 +625,10 @@ float Mass::GetNormalY()
 {
     return this->normal_force.y;
 }
+float Mass::GetNormalZ()
+{
+    return this->normal_force.z;
+}
 float Mass::GetTotalForcesX()
 {
     return this->force_total.x;
@@ -564,6 +636,10 @@ float Mass::GetTotalForcesX()
 float Mass::GetTotalForcesY()
 {
     return this->force_total.y;
+}
+float Mass::GetTotalForcesZ()
+{
+    return this->force_total.z;
 }
 float Mass::GetMass()
 {
@@ -577,5 +653,6 @@ void Mass::SetMomOfInertia(float value)
 // private
 float Mass::ComputeRadius()
 {
-    return std::min(this->mass_kg * 80.5f, 15.0f);
+    //return std::min(this->mass_kg * 80.5f, 15.0f);
+    return std::min(this->mass_kg * 7.5f, 2.0f);
 }

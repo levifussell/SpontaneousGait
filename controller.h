@@ -58,7 +58,7 @@ public:
     void MoveRightBack(float target_length, float target_angle);
 
     void Update(float dt);
-    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET);
+    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector3f POS_OFFSET);
     void DrawData(sf::RenderWindow& window, sf::Vector2f position, float time);
 
     float ComputeCentreOfMassX();

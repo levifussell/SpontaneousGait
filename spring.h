@@ -5,6 +5,7 @@
 #include <math.h>
 #include <iostream>
 #include "mass.h"
+#include "three_d_utils.h"
 
 class Spring
 {
@@ -83,7 +84,7 @@ public:
     //float ComputePrismaticForceMagnitude();
     //float ComputeRotaryTorque();
     void Update(float dt, bool skip_internal_update);
-    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET);
+    void Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector3f POS_OFFSET);
 
     void SetLength(float value);
     float GetCurrentLength();

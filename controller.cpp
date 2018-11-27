@@ -25,8 +25,11 @@ void Controller::InitModel(float FLOOR_Y)
     ////dog:
     //float startX = 600.0f;
     //float startY = 600.0f;
-    float startX = 1.0f;
-    float startY = 1.2f;
+    //float startX = 1.0f;
+    //float startY = 1.2f;
+    float startX = 0.0f;
+    float startY = 0.0f;
+    float startZ = -50.0f;
         //body:
     
     float body_length = 0.19f;
@@ -49,9 +52,11 @@ void Controller::InitModel(float FLOOR_Y)
     //float k_link = 1.0f;
     //float d_link = 1.0f;
     float k_rot = 8.0*pow(10.0f,4);
-    float d_rot = 1.6*pow(10.0f, -2);
+    float d_rot = 1.6*pow(10.0f,1);
     float k_spine = 4.0*pow(10.0f,5);
-    float d_spine = 1.6*pow(10.0f,-1);
+    float d_spine = 1.6*pow(10.0f,1);
+    //float k_spine = 0.0*pow(10.0f,5);
+    //float d_spine = 0.0*pow(10.0f,-1);
 
     //float mass_shoulder = 0.8f;
     //float mass_hip = 0.8f;
@@ -64,13 +69,13 @@ void Controller::InitModel(float FLOOR_Y)
     //float t_d_b = 20.0f; //2.5f; //20.0f;
     //float k_b = 3750.0f;
     //float d_b = 100.0f;
-    this->masses[0] = new Mass(sf::Vector2f(startX, startY), mass_shoulder, FLOOR_Y);
-    this->masses[1] = new Mass(sf::Vector2f(startX+body_rate, startY), mass_spine, FLOOR_Y);
-    this->masses[2] = new Mass(sf::Vector2f(startX+body_rate*2.0f, startY), mass_spine, FLOOR_Y);
-    this->masses[3] = new Mass(sf::Vector2f(startX+body_rate*3.0f, startY), mass_spine, FLOOR_Y);
-    this->masses[4] = new Mass(sf::Vector2f(startX+body_rate*4.0f, startY), mass_spine, FLOOR_Y);
-    this->masses[13] = new Mass(sf::Vector2f(startX+body_rate*5.0f, startY), mass_spine, FLOOR_Y);
-    this->masses[14] = new Mass(sf::Vector2f(startX+body_rate*6.0f, startY), mass_shoulder, FLOOR_Y);
+    this->masses[0] = new Mass(sf::Vector3f(startX, startY, startZ), mass_shoulder, FLOOR_Y);
+    this->masses[1] = new Mass(sf::Vector3f(startX+body_rate, startY, startZ), mass_spine, FLOOR_Y);
+    this->masses[2] = new Mass(sf::Vector3f(startX+body_rate*2.0f, startY, startZ), mass_spine, FLOOR_Y);
+    this->masses[3] = new Mass(sf::Vector3f(startX+body_rate*3.0f, startY, startZ), mass_spine, FLOOR_Y);
+    this->masses[4] = new Mass(sf::Vector3f(startX+body_rate*4.0f, startY, startZ), mass_spine, FLOOR_Y);
+    this->masses[13] = new Mass(sf::Vector3f(startX+body_rate*5.0f, startY, startZ), mass_spine, FLOOR_Y);
+    this->masses[14] = new Mass(sf::Vector3f(startX+body_rate*6.0f, startY, startZ), mass_shoulder, FLOOR_Y);
     //float k_rigid = 880.0f; //12500.0f;
     //float d_rigid = 20.0f;
     //float t_k_rigid = 100.0f;
@@ -158,51 +163,52 @@ void Controller::InitModel(float FLOOR_Y)
     //float foot_offset_y = 70.0f;
     //float femur_size = 40.0f;
     //float shin_size = 20.0f;
+    float two_pi = 2.0f*3.14152f;
     sf::Color c_red = sf::Color(255.0f, 0.0f, 0.0f, 255.0f);
     sf::Color c_green = sf::Color(0.0f, 255.0f, 0.0f, 255.0f);
         //leg left-front
-    this->masses[5] = new Mass(sf::Vector2f(startX, startY + leg_rate), 
+    this->masses[5] = new Mass(sf::Vector3f(startX, startY - leg_rate, startZ), 
                                 mass_knee, FLOOR_Y, c_red);
-    this->masses[6] = new Mass(sf::Vector2f(startX, startY + leg_rate*2.0f), 
+    this->masses[6] = new Mass(sf::Vector3f(startX, startY - leg_rate*2.0f, startZ), 
                                 mass_foot, FLOOR_Y, c_red);
     this->springs[4] = new Spring(leg_rate, k_link, d_link, 
-                            3.1415f/2.3f, k_rot, d_rot, 1.0f,
+                            two_pi-3.1415f/2.3f, k_rot, d_rot, 1.0f,
                             this->masses[0], this->masses[5]);
     this->springs[5] = new Spring(leg_rate, k_pri, d_pri, 
                             0.0f, k_rot, d_rot, 1.0f,
                             this->masses[5], this->masses[6]);
 
         //leg right-front
-    this->masses[7] = new Mass(sf::Vector2f(startX + body_length, startY + leg_rate), 
+    this->masses[7] = new Mass(sf::Vector3f(startX + body_length, startY - leg_rate, startZ), 
                                 mass_knee, FLOOR_Y, c_red);
-    this->masses[8] = new Mass(sf::Vector2f(startX + body_length, startY + leg_rate*2.0f), 
+    this->masses[8] = new Mass(sf::Vector3f(startX + body_length, startY - leg_rate*2.0f, startZ), 
                                 mass_foot, FLOOR_Y, c_red);
     this->springs[6] = new Spring(leg_rate, k_link, d_link, 
-                            3.1415f/2.3f, k_rot, d_rot, 1.0f,
+                            two_pi-3.1415f/2.3f, k_rot, d_rot, 1.0f,
                             this->masses[14], this->masses[7]);
     this->springs[7] = new Spring(leg_rate, k_pri, d_pri, 
                             0.0f, k_rot, d_rot, 1.0f,
                             this->masses[7], this->masses[8]);
 
         //leg left-back
-    this->masses[9] = new Mass(sf::Vector2f(startX, startY + leg_rate), 
+    this->masses[9] = new Mass(sf::Vector3f(startX, startY - leg_rate, startZ), 
                                 mass_knee, FLOOR_Y, c_green);
-    this->masses[10] = new Mass(sf::Vector2f(startX, startY + leg_rate*2.0f), 
+    this->masses[10] = new Mass(sf::Vector3f(startX, startY - leg_rate*2.0f, startZ), 
                                 mass_foot, FLOOR_Y, c_green);
     this->springs[8] = new Spring(leg_rate, k_link, d_link, 
-                            3.1415f/1.7f, k_rot, d_rot, 1.0f,
+                            two_pi-3.1415f/1.7f, k_rot, d_rot, 1.0f,
                             this->masses[0], this->masses[9]);
     this->springs[9] = new Spring(leg_rate, k_pri, d_pri, 
                             0.0f, k_rot, d_rot, 1.0f,
                             this->masses[9], this->masses[10]);
 
         //leg right-back
-    this->masses[11] = new Mass(sf::Vector2f(startX + body_length, startY + leg_rate), 
+    this->masses[11] = new Mass(sf::Vector3f(startX + body_length, startY - leg_rate, startZ), 
                                 mass_knee, FLOOR_Y, c_green);
-    this->masses[12] = new Mass(sf::Vector2f(startX + body_length, startY + leg_rate*2.0f), 
+    this->masses[12] = new Mass(sf::Vector3f(startX + body_length, startY - leg_rate*2.0f, startZ), 
                                 mass_foot, FLOOR_Y, c_green);
     this->springs[10] = new Spring(leg_rate, k_link, d_link, 
-                            3.1415f/1.7f, k_rot, d_rot, 1.0f,
+                            two_pi-3.1415f/1.7f, k_rot, d_rot, 1.0f,
                             this->masses[14], this->masses[11]);
     this->springs[11] = new Spring(leg_rate, k_pri, d_pri, 
                             0.0f, k_rot, d_rot, 1.0f,
@@ -219,20 +225,20 @@ void Controller::InitModel(float FLOOR_Y)
     //                        this->masses[13], this->masses[12]);
 
     // set other leg parameters
-    this->leg_phases[0] = 3.1415f/1.7f;
-    this->leg_phases[1] = 3.1415f/2.3f;
-    this->leg_phases[2] = 3.1415f/1.7f;
-    this->leg_phases[3] = 3.1415f/2.3f;
+    this->leg_phases[0] = two_pi - 3.1415f/1.5f;
+    this->leg_phases[1] = two_pi - 3.1415f/2.5f;
+    this->leg_phases[2] = two_pi - 3.1415f/1.5f;
+    this->leg_phases[3] = two_pi - 3.1415f/2.5f;
 
     //this->leg_offset = sf::Vector2f(0.0f, 60.0f);
     //this->leg_amp = sf::Vector2f(0.02f, 0.016f);
     //this->leg_amp = sf::Vector2f(20.0f, 20.0f);
     //this->alpha_ground_scalar = 1.0f;
 
-    this->leg_angular_velocity = 4.0f; //8.0f;
-    this->support_scalar = 1.5f;
+    this->leg_angular_velocity = 8.0f; //8.0f;
+    this->support_scalar = 2.5f;
     this->propulsion_scalar = 1.5f; //0.5f;
-    this->settle_angle = 3.14152f/2.0f;
+    this->settle_angle = two_pi - 3.14152f/2.0f;
 
     // create lookup table for legs names to joints
     this->leg_names[0] = "left_front";
@@ -288,7 +294,7 @@ void Controller::UpdateLegPhase(std::string leg_name, float dt)
     int mass_idx = this->leg_joint_indices[idx][2];
 
     // compute components of Tegotae
-    float support = this->support_scalar * this->masses[mass_idx]->GetNormalY() * cos(this->leg_phases[idx]);
+    float support = -this->support_scalar * this->masses[mass_idx]->GetNormalY() * cos(this->leg_phases[idx]);
     float propulsion = this->propulsion_scalar * this->masses[mass_idx]->GetNormalX() * cos(this->leg_phases[idx]);
     //float coupling = 0.0f;
     //for(int i = 0; i < 4; ++i)
@@ -299,15 +305,20 @@ void Controller::UpdateLegPhase(std::string leg_name, float dt)
     //    coupling += mul*1.0f*sin(this->leg_phases[idx] - this->leg_phases[i]);
     //}
    
-    float phase_update = -this->leg_angular_velocity - support - propulsion; // - coupling;
+    float phase_update = this->leg_angular_velocity - support - propulsion; // - coupling;
     //std::cout << "support: " << support << "\n";
     //std::cout << "propulsion: " << propulsion << "\n";
 
     // update phase using Euler's Method
     this->leg_phases[idx] += dt * phase_update;
 
+    float two_pi = 3.14152f*2.0f;
     if(this->leg_phases[idx] < 0.0)
-        this->leg_phases[idx] += 3.14152f*2.0f;
+        this->leg_phases[idx] += two_pi;
+    if(this->leg_phases[idx] > two_pi)
+        this->leg_phases[idx] -= two_pi;
+
+    //std::cout << "LEG PHASE: " << this->leg_phases[idx] << "\n";
 }
 
 void Controller::SetLegTarget(std::string leg_name, float phase)
@@ -351,7 +362,7 @@ void Controller::Update(float dt)
         this->SetLegTarget(this->leg_names[i], this->leg_phases[i]);
     }
 
-    std::cout << "----------------------------__\n";
+    //std::cout << "----------------------------__\n";
     // Compute forces for t
     for(int i = 0; i < MASS_COUNT; ++i)
         this->masses[i]->UpdateGravity();
@@ -361,19 +372,25 @@ void Controller::Update(float dt)
         this->masses[i]->UpdateFriction(dt);
 
     // store the positions, velocities, and accelerations
-    sf::Vector2f pos_t[MASS_COUNT];
-    sf::Vector2f pos_t_plus_one[MASS_COUNT];
-    sf::Vector2f vel_t[MASS_COUNT];
-    sf::Vector2f vel_t_plus_half[MASS_COUNT];
-    sf::Vector2f acc_t[MASS_COUNT];
+    sf::Vector3f pos_t[MASS_COUNT];
+    sf::Vector3f pos_t_plus_one[MASS_COUNT];
+    sf::Vector3f vel_t[MASS_COUNT];
+    sf::Vector3f vel_t_plus_half[MASS_COUNT];
+    sf::Vector3f acc_t[MASS_COUNT];
     for(int i = 0; i < MASS_COUNT; ++i)
     {
-        pos_t[i] = sf::Vector2f(this->masses[i]->GetPosX(),
-                                this->masses[i]->GetPosY());
-        vel_t[i] = sf::Vector2f(this->masses[i]->GetVelX(),
-                                this->masses[i]->GetVelY());
-        acc_t[i] = sf::Vector2f(this->masses[i]->ComputeAccX(),
-                                this->masses[i]->ComputeAccY());
+        pos_t[i] = sf::Vector3f(this->masses[i]->GetPosX(),
+                                this->masses[i]->GetPosY(),
+                                this->masses[i]->GetPosZ());
+
+        vel_t[i] = sf::Vector3f(this->masses[i]->GetVelX(),
+                                this->masses[i]->GetVelY(),
+                                this->masses[i]->GetVelZ());
+
+        acc_t[i] = sf::Vector3f(this->masses[i]->ComputeAccX(),
+                                this->masses[i]->ComputeAccY(),
+                                this->masses[i]->ComputeAccZ());
+
         vel_t_plus_half[i] = vel_t[i] + 0.5f*dt*acc_t[i];
         pos_t_plus_one[i] = pos_t[i] + vel_t_plus_half[i]*dt;
     }
@@ -400,9 +417,10 @@ void Controller::Update(float dt)
     // now set the velocity of the mass
     for(int i = 0; i < MASS_COUNT; ++i)
     {
-        sf::Vector2f vel_t_plus_one;
+        sf::Vector3f vel_t_plus_one;
         vel_t_plus_one.x = vel_t_plus_half[i].x + 0.5f * dt * this->masses[i]->ComputeAccX();
         vel_t_plus_one.y = vel_t_plus_half[i].y + 0.5f * dt * this->masses[i]->ComputeAccY();
+        vel_t_plus_one.z = vel_t_plus_half[i].z + 0.5f * dt * this->masses[i]->ComputeAccZ();
         this->masses[i]->SetVel(vel_t_plus_one);
     }
 
@@ -425,7 +443,7 @@ void Controller::Update(float dt)
 
 }
 
-void Controller::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector2f POS_OFFSET)
+void Controller::Draw(sf::RenderWindow& window, const float PIXEL_TO_METER, sf::Vector3f POS_OFFSET)
 {
     for(int i = 0; i < MASS_COUNT; ++i)
     {
